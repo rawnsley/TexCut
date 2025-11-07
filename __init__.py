@@ -9,7 +9,7 @@ For more information about AI attribution, see ATTRIBUTION.md in the project roo
 bl_info = {
     "name": "TexCut",
     "author": "Your Name",
-    "version": (2, 0, 1),
+    "version": (2, 1, 0),
     "blender": (3, 0, 0),
     "location": "Image Editor > Sidebar > Image",
     "description": "Create optimized 2D meshes from images with transparency",
@@ -69,7 +69,7 @@ def fix_self_intersections(contour):
     return coords_array
 
 
-def analyze_alpha_channel(image_path, threshold=0.5):
+def analyze_alpha_channel(image_path, threshold=0.01):
     """
     Analyze image alpha channel and return outline points using OpenCV contour detection.
     Always uses highest quality (0.001) with self-intersection fixing.
@@ -119,11 +119,8 @@ def analyze_alpha_channel(image_path, threshold=0.5):
     largest_contour = fix_self_intersections(largest_contour)
     print(f"TexCut: After self-intersection fix: {len(largest_contour)} points")
 
-    # Convert OpenCV contour format to list of tuples
-    contour = []
-    for point in largest_contour:
-        x, y = point[0]
-        contour.append((int(x), int(y)))
+    # Convert to list of tuples
+    contour = [(int(point[0][0]), int(point[0][1])) for point in largest_contour]
 
     # Normalize coordinates to -0.5 to 0.5 range
     normalized_contour = []
@@ -192,7 +189,7 @@ def create_mesh_from_outline(name, outline_points, image_width, image_height):
     return obj
 
 
-def create_optimized_mesh(name, image_path, aspect_ratio=True, threshold=0.5):
+def create_optimized_mesh(name, image_path, aspect_ratio=True, threshold=0.01):
     """
     Main function to create an optimized mesh from an image with transparency.
     Always uses highest quality settings.
@@ -278,7 +275,7 @@ def apply_image_texture_from_datablock(obj, img):
     links.new(node_bsdf.outputs['BSDF'], node_output.inputs['Surface'])
 
     # Set blend mode for transparency
-    mat.blend_method = 'BLEND'
+    mat.blend_method = 'CLIP'  # Use alpha clipping (MASK mode)
     mat.shadow_method = 'CLIP'
 
     # Assign material to object
@@ -321,7 +318,7 @@ class TEXCUT_OT_create_mesh(bpy.types.Operator):
     alpha_threshold: bpy.props.FloatProperty(
         name="Alpha Threshold",
         description="Alpha threshold for edge detection (higher = tighter fit around opaque areas)",
-        default=0.5,
+        default=0.01,
         min=0.01,
         max=1.0,
         step=0.05
