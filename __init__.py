@@ -9,7 +9,7 @@ For more information about AI attribution, see ATTRIBUTION.md in the project roo
 bl_info = {
     "name": "TexCut",
     "author": "Claude and Rupert",
-    "version": (2, 1, 0),
+    "version": (2, 2, 0),
     "blender": (3, 0, 0),
     "location": "Image Editor > Sidebar > Image",
     "description": "Create optimized 2D meshes from images with transparency",
@@ -24,67 +24,18 @@ import cv2
 import os
 
 
-def fix_self_intersections(contour):
-    """
-    Fix self-intersecting polygons using Shapely's buffer(0) method.
-    Requires Shapely to be installed.
-
-    Args:
-        contour: OpenCV contour array
-
-    Returns:
-        Fixed contour array (OpenCV format)
-
-    Raises:
-        ImportError: If Shapely is not available
-    """
-    try:
-        from shapely.geometry import Polygon
-    except ImportError:
-        raise ImportError(
-            "Shapely is required for HIGH quality mesh generation. "
-            "Please install it using: pip install shapely"
-        )
-
-    # Convert to list of tuples
-    contour_list = [(int(point[0][0]), int(point[0][1])) for point in contour]
-
-    # Create polygon
-    poly = Polygon(contour_list)
-
-    # Fix self-intersections using buffer(0) - a well-known technique
-    fixed_poly = poly.buffer(0)
-
-    # If it becomes MultiPolygon, take the largest part
-    if fixed_poly.geom_type == 'MultiPolygon':
-        fixed_poly = max(fixed_poly.geoms, key=lambda p: p.area)
-
-    # Extract exterior coordinates (excluding duplicate last point)
-    coords = list(fixed_poly.exterior.coords[:-1])
-
-    # Convert back to OpenCV format
-    coords_array = np.array(coords, dtype=np.int32).reshape((-1, 1, 2))
-
-    print(f"TexCut: Fixed self-intersections using Shapely ({len(coords)} vertices)")
-    return coords_array
-
-
 def analyze_alpha_channel(image_path, threshold=0.01, boundary_offset=8):
     """
     Analyze image alpha channel and return outline points using OpenCV contour detection.
-    Always uses highest quality (0.001) with self-intersection fixing.
-    Requires Shapely for geometry repair.
+    Uses highest quality (0.001) with boundary dilation to prevent self-intersections.
 
     Args:
         image_path: Path to the image file
         threshold: Alpha threshold for considering a pixel opaque (0-1)
-        boundary_offset: Number of pixels to expand the boundary (default 8)
+        boundary_offset: Number of pixels to expand the boundary (default 8, minimum 1)
 
     Returns:
         Tuple of (normalized_contour, width, height)
-
-    Raises:
-        ImportError: If Shapely is not installed
     """
     img = Image.open(image_path).convert('RGBA')
     width, height = img.size
@@ -121,10 +72,6 @@ def analyze_alpha_channel(image_path, threshold=0.01, boundary_offset=8):
     epsilon = 0.001 * perimeter
     largest_contour = cv2.approxPolyDP(largest_contour, epsilon, True)
     print(f"TexCut: After simplification (epsilon={epsilon:.2f}): {len(largest_contour)} points")
-
-    # Fix any self-intersections using Shapely
-    largest_contour = fix_self_intersections(largest_contour)
-    print(f"TexCut: After self-intersection fix: {len(largest_contour)} points")
 
     # Convert to list of tuples
     contour = [(int(point[0][0]), int(point[0][1])) for point in largest_contour]
@@ -334,9 +281,9 @@ class TEXCUT_OT_create_mesh(bpy.types.Operator):
 
     boundary_offset: bpy.props.IntProperty(
         name="Boundary Offset",
-        description="Number of pixels to expand the boundary to avoid edge clipping",
+        description="Number of pixels to expand the boundary to avoid edge clipping (minimum 1 to prevent self-intersections)",
         default=8,
-        min=0,
+        min=1,
         max=20
     )
 
@@ -448,20 +395,7 @@ class TEXCUT_PT_panel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-
-        image = context.space_data.image
-
-        if image:
-            layout.label(text=f"Image: {image.name}")
-            layout.separator()
-
-        layout.label(text="Create Optimized Mesh:")
         layout.operator("texcut.create_mesh", icon='MESH_DATA')
-
-        layout.separator()
-        layout.label(text="Highest quality, ~160 vertices", icon='INFO')
-        layout.label(text="Requires Shapely installed")
-
 
 # Registration
 classes = (

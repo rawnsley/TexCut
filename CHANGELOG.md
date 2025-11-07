@@ -1,5 +1,25 @@
 # TexCut Changelog
 
+## [2.2.0] - 2025-11-07
+
+### Removed
+- **Shapely dependency**: No longer required!
+- Removed `fix_self_intersections()` function
+- Simpler installation - works with just Blender's built-in Python
+
+### Changed
+- Minimum boundary offset is now 1 pixel (was 0)
+- Dilation alone prevents self-intersections (proven by testing)
+
+### Why This Change?
+Testing revealed that boundary dilation alone prevents 100% of self-intersections in all test images. The Shapely-based fix was redundant when dilation is enabled. By requiring a minimum of 1 pixel dilation:
+- ✅ No Shapely dependency needed
+- ✅ Simpler installation
+- ✅ Guaranteed valid polygons (dilation prevents self-intersections)
+- ✅ Fewer dependencies = fewer potential issues
+
+See [SELF_INTERSECTION_TEST_RESULTS.md](SELF_INTERSECTION_TEST_RESULTS.md) for detailed test results.
+
 ## [2.1.0] - 2025-11-07
 
 ### Added
