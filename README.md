@@ -8,29 +8,66 @@ TexCut creates optimized 2D meshes from images with transparency by following th
 
 - Analyzes image alpha channel to detect non-transparent regions
 - Generates mesh geometry that follows the transparency outline
-- Automatically applies the image as a texture with proper alpha blending
+- Automatically applies the image as a texture
 - Maintains image aspect ratio
 - User-adjustable boundary offset (prevents edge clipping)
 - Simple one-click operation from the Image Editor
-- **Zero external dependencies** - works with Blender's built-in Python!
+- **Minimal dependencies** - only requires OpenCV (one-time install)
 
 ## Installation
+
+### Step 1: Install OpenCV (One-Time Setup)
+
+OpenCV is not included with Blender by default, but installation is simple:
+
+**On Windows:**
+1. Open Command Prompt as Administrator
+2. Navigate to Blender's Python folder:
+   ```
+   cd "C:\Program Files\Blender Foundation\Blender 3.x\3.x\python\bin"
+   ```
+3. Install OpenCV:
+   ```
+   python.exe -m pip install opencv-python
+   ```
+
+**On macOS:**
+1. Open Terminal
+2. Navigate to Blender's Python folder:
+   ```
+   cd /Applications/Blender.app/Contents/Resources/3.x/python/bin
+   ```
+3. Install OpenCV:
+   ```
+   ./python3.x -m pip install opencv-python
+   ```
+
+**On Linux:**
+1. Open Terminal
+2. Navigate to Blender's Python folder (location varies by installation):
+   ```
+   cd /usr/share/blender/3.x/python/bin
+   ```
+3. Install OpenCV:
+   ```
+   ./python3.x -m pip install opencv-python
+   ```
+
+### Step 2: Install the Add-on
 
 1. Download the latest release zip from [Releases](https://github.com/rawnsley/TexCut/releases)
 2. In Blender, go to `Edit > Preferences > Add-ons`
 3. Click `Install...` and select the downloaded zip file
 4. Enable the add-on by checking the checkbox next to "Image: TexCut"
 
-**That's it!** No additional setup required.
-
 ## Requirements
 
-This add-on uses only packages included with Blender:
+This add-on uses these Python packages:
 - `numpy` ✅ (included with Blender)
 - `Pillow` (PIL) ✅ (included with Blender)
-- `opencv-python` ✅ (included with Blender)
+- `opencv-python` ⚠️ **Requires installation** (see installation instructions above)
 
-**No external dependencies needed!** Everything works out of the box.
+Only OpenCV needs to be installed - it's a simple one-time setup using pip.
 
 ## Usage
 
@@ -63,12 +100,6 @@ In scenes with many overlapping transparent objects, reducing overdraw can lead 
 - Faster rendering times
 - Better GPU performance
 - Reduced memory bandwidth usage
-- Smoother viewport performance
-
-### Quality
-- ~160 vertices for complex shapes
-- Boundary offset prevents texture edge clipping
-- No self-intersections (guaranteed by 1px minimum dilation)
 
 ## Technical Details
 
@@ -77,7 +108,6 @@ The add-on works by:
 2. Creating a binary mask based on an alpha threshold
 3. Dilating the mask by N pixels (boundary offset) to prevent edge clipping
 4. Detecting contours using OpenCV
-5. Simplifying the contour to ~160 vertices (highest quality)
 6. Creating mesh geometry as an n-gon face
 7. Setting up UV coordinates for proper texture mapping
 8. Configuring shader nodes with alpha clipping
@@ -85,7 +115,7 @@ The add-on works by:
 ### Why Dilation?
 The boundary offset dilation serves two purposes:
 1. **Prevents edge clipping** - Ensures texture edges aren't cut off
-2. **Prevents self-intersections** - Smooths the boundary to create valid polygons
+2. **Reduces self-intersections** - Smooths the boundary to create valid polygons
 
 Testing showed that 1+ pixel dilation prevents 100% of self-intersections across all test images.
 
@@ -94,7 +124,7 @@ Testing showed that 1+ pixel dilation prevents 100% of self-intersections across
 See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
 
 **Current Version: 2.2.0**
-- Removed Shapely dependency (zero external dependencies!)
+- Removed Shapely dependency (only OpenCV required)
 - Minimum boundary offset: 1 pixel (prevents self-intersections)
 - Simpler installation
 - Smaller package size

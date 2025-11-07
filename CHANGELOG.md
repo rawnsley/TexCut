@@ -5,7 +5,7 @@
 ### Removed
 - **Shapely dependency**: No longer required!
 - Removed `fix_self_intersections()` function
-- Simpler installation - works with just Blender's built-in Python
+- Simpler installation (only OpenCV required, not Shapely)
 
 ### Changed
 - Minimum boundary offset is now 1 pixel (was 0)
