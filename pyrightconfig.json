@@ -1,0 +1,8 @@
+{
+  "ignore": [
+    "bpy",
+    "bmesh"
+  ],
+  "pythonVersion": "3.10",
+  "pythonPlatform": "All"
+}
