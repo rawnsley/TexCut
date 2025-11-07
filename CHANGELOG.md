@@ -1,5 +1,30 @@
 # TexCut Changelog
 
+## [2.1.0] - 2025-11-07
+
+### Added
+- **Boundary Offset Control**: New user-adjustable parameter to expand mesh boundary
+- Prevents edge clipping by dilating the alpha mask before contour detection
+- Default: 8 pixels (user adjustable from 0-20 pixels)
+
+### Changed
+- Replaced Shapely buffer expansion with OpenCV dilation
+- More efficient: 128 vertices (vs 238 with buffer approach)
+- Smoother boundaries with no self-intersections introduced
+
+### Technical Details
+The boundary expansion uses `cv2.dilate()` on the binary mask before contour detection:
+- Expands boundary outward by N pixels (configurable)
+- No vertex explosion (dilation happens at mask level)
+- Actually reduces vertex count by smoothing sharp corners
+- No self-intersections created by expansion
+
+### Benefits
+- ✅ Prevents texture edge clipping
+- ✅ User-controllable expansion (0-20 pixels)
+- ✅ More efficient than geometric buffer
+- ✅ Fewer vertices, smoother result
+
 ## [2.0.1] - 2025-11-07
 
 ### Fixed

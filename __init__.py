@@ -8,7 +8,7 @@ For more information about AI attribution, see ATTRIBUTION.md in the project roo
 
 bl_info = {
     "name": "TexCut",
-    "author": "Your Name",
+    "author": "Claude and Rupert",
     "version": (2, 1, 0),
     "blender": (3, 0, 0),
     "location": "Image Editor > Sidebar > Image",
@@ -69,7 +69,7 @@ def fix_self_intersections(contour):
     return coords_array
 
 
-def analyze_alpha_channel(image_path, threshold=0.01):
+def analyze_alpha_channel(image_path, threshold=0.01, boundary_offset=8):
     """
     Analyze image alpha channel and return outline points using OpenCV contour detection.
     Always uses highest quality (0.001) with self-intersection fixing.
@@ -78,6 +78,7 @@ def analyze_alpha_channel(image_path, threshold=0.01):
     Args:
         image_path: Path to the image file
         threshold: Alpha threshold for considering a pixel opaque (0-1)
+        boundary_offset: Number of pixels to expand the boundary (default 8)
 
     Returns:
         Tuple of (normalized_contour, width, height)
@@ -93,6 +94,12 @@ def analyze_alpha_channel(image_path, threshold=0.01):
 
     # Create binary mask (0 or 255 for OpenCV)
     mask = (alpha > (threshold * 255)).astype(np.uint8) * 255
+
+    # Dilate the mask to expand boundary by boundary_offset pixels
+    if boundary_offset > 0:
+        kernel = np.ones((boundary_offset * 2 + 1, boundary_offset * 2 + 1), np.uint8)
+        mask = cv2.dilate(mask, kernel, iterations=1)
+        print(f"TexCut: Expanded boundary by {boundary_offset} pixels using dilation")
 
     # Find contours using OpenCV
     contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -189,7 +196,7 @@ def create_mesh_from_outline(name, outline_points, image_width, image_height):
     return obj
 
 
-def create_optimized_mesh(name, image_path, aspect_ratio=True, threshold=0.01):
+def create_optimized_mesh(name, image_path, aspect_ratio=True, threshold=0.01, boundary_offset=8):
     """
     Main function to create an optimized mesh from an image with transparency.
     Always uses highest quality settings.
@@ -199,12 +206,13 @@ def create_optimized_mesh(name, image_path, aspect_ratio=True, threshold=0.01):
         image_path: Path to the image file
         aspect_ratio: Maintain image aspect ratio
         threshold: Alpha threshold for edge detection (0-1)
+        boundary_offset: Number of pixels to expand the boundary (default 8)
 
     Returns:
         Created mesh object
     """
     # Analyze image
-    outline_points, width, height = analyze_alpha_channel(image_path, threshold)
+    outline_points, width, height = analyze_alpha_channel(image_path, threshold, boundary_offset)
 
     if not outline_points:
         # Fallback to simple quad if no outline detected
@@ -324,6 +332,14 @@ class TEXCUT_OT_create_mesh(bpy.types.Operator):
         step=0.05
     )
 
+    boundary_offset: bpy.props.IntProperty(
+        name="Boundary Offset",
+        description="Number of pixels to expand the boundary to avoid edge clipping",
+        default=8,
+        min=0,
+        max=20
+    )
+
     @classmethod
     def poll(cls, context):
         """Only enable if an image is active in the Image Editor."""
@@ -376,7 +392,8 @@ class TEXCUT_OT_create_mesh(bpy.types.Operator):
                 image.name,
                 filepath,
                 self.maintain_aspect,
-                self.alpha_threshold
+                self.alpha_threshold,
+                self.boundary_offset
             )
 
             if obj:
@@ -412,6 +429,7 @@ class TEXCUT_OT_create_mesh(bpy.types.Operator):
         layout = self.layout
 
         layout.prop(self, "alpha_threshold")
+        layout.prop(self, "boundary_offset")
         layout.prop(self, "maintain_aspect")
 
 
