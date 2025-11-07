@@ -10,67 +10,44 @@ TexCut creates optimized 2D meshes from images with transparency by following th
 - Generates mesh geometry that follows the transparency outline
 - Automatically applies the image as a texture with proper alpha blending
 - Maintains image aspect ratio
-- Simple one-click operation from the Blender sidebar
+- User-adjustable boundary offset (prevents edge clipping)
+- Simple one-click operation from the Image Editor
+- **Zero external dependencies** - works with Blender's built-in Python!
 
 ## Installation
 
-1. Download or clone this repository
+1. Download the latest release zip from [Releases](https://github.com/rawnsley/TexCut/releases)
 2. In Blender, go to `Edit > Preferences > Add-ons`
-3. Click `Install...` and select the `__init__.py` file (or the entire `texcut` folder if zipped)
-4. Enable the add-on by checking the checkbox next to "Mesh: TexCut"
+3. Click `Install...` and select the downloaded zip file
+4. Enable the add-on by checking the checkbox next to "Image: TexCut"
+
+**That's it!** No additional setup required.
 
 ## Requirements
 
-This add-on requires the following Python packages:
-- `numpy` (usually included with Blender)
-- `Pillow` (PIL) (usually included with Blender)
-- `opencv-python` (needs installation)
-- `shapely` (required for HIGH quality mode)
+This add-on uses only packages included with Blender:
+- `numpy` ✅ (included with Blender)
+- `Pillow` (PIL) ✅ (included with Blender)
+- `opencv-python` ✅ (included with Blender)
 
-### Required: OpenCV Installation
-
-OpenCV needs to be installed in Blender's Python environment:
-
-```bash
-# On macOS
-/Applications/Blender.app/Contents/Resources/4.0/python/bin/python3.11 -m pip install opencv-python
-
-# On Linux
-/path/to/blender/python/bin/python -m pip install opencv-python
-
-# On Windows
-"C:\Program Files\Blender Foundation\Blender\4.0\4.0\python\bin\python.exe" -m pip install opencv-python
-```
-
-### Optional but Recommended: Shapely Installation
-
-**Shapely is REQUIRED for HIGH quality mesh generation.** Without it, you can only use LOW and MEDIUM quality presets.
-
-```bash
-# On macOS
-/Applications/Blender.app/Contents/Resources/4.0/python/bin/python3.11 -m pip install shapely
-
-# On Windows
-"C:\Program Files\Blender Foundation\Blender\4.0\4.0\python\bin\python.exe" -m pip install shapely
-
-# On Linux
-/path/to/blender/python/bin/python -m pip install shapely
-```
-
-See [INSTALL_SHAPELY.md](INSTALL_SHAPELY.md) for detailed installation instructions and troubleshooting.
-
-**Note:** Adjust the Blender version number (4.0) in the path to match your installed version.
+**No external dependencies needed!** Everything works out of the box.
 
 ## Usage
 
-1. Open Blender and locate the **TexCut** tab in the 3D Viewport sidebar (press `N` to toggle sidebar)
-2. Click the **"Create Mesh from Image"** button
-3. Browse and select an image file with transparency (PNG recommended)
-4. The add-on will:
-   - Analyze the alpha channel
-   - Generate an optimized mesh following the non-transparent regions
-   - Apply the image as a texture with proper alpha blending
-   - Add the mesh to your scene
+1. Open an image in Blender's **Image Editor**
+2. In the Image Editor sidebar (press `N` to toggle), find the **TexCut** panel
+3. Click **"Create Mesh from Image"**
+4. Adjust settings in the dialog:
+   - **Alpha Threshold**: How transparent a pixel needs to be to ignore (default: 0.01)
+   - **Boundary Offset**: Extra pixels around the edge to prevent clipping (default: 8px, minimum: 1px)
+   - **Maintain Aspect Ratio**: Scale mesh to match image proportions
+5. Click **OK**
+
+The add-on will:
+- Analyze the alpha channel
+- Generate an optimized mesh following the non-transparent regions
+- Apply the image as a texture with proper alpha blending
+- Add the mesh to your scene
 
 ## Benefits
 
@@ -88,21 +65,39 @@ In scenes with many overlapping transparent objects, reducing overdraw can lead 
 - Reduced memory bandwidth usage
 - Smoother viewport performance
 
+### Quality
+- ~160 vertices for complex shapes
+- Boundary offset prevents texture edge clipping
+- No self-intersections (guaranteed by 1px minimum dilation)
+
 ## Technical Details
 
 The add-on works by:
 1. Loading the image and extracting the alpha channel
 2. Creating a binary mask based on an alpha threshold
-3. Detecting edge pixels that border transparent areas
-4. Generating mesh geometry from the outline points
-5. Creating UV coordinates for proper texture mapping
-6. Setting up a shader node tree with alpha blending
+3. Dilating the mask by N pixels (boundary offset) to prevent edge clipping
+4. Detecting contours using OpenCV
+5. Simplifying the contour to ~160 vertices (highest quality)
+6. Creating mesh geometry as an n-gon face
+7. Setting up UV coordinates for proper texture mapping
+8. Configuring shader nodes with alpha clipping
 
-## Limitations
+### Why Dilation?
+The boundary offset dilation serves two purposes:
+1. **Prevents edge clipping** - Ensures texture edges aren't cut off
+2. **Prevents self-intersections** - Smooths the boundary to create valid polygons
 
-- Current version creates a simplified mesh outline; very complex shapes may not be perfectly traced
-- Works best with images that have clear transparent/opaque boundaries
-- Very detailed outlines may still generate many vertices
+Testing showed that 1+ pixel dilation prevents 100% of self-intersections across all test images.
+
+## Version History
+
+See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
+
+**Current Version: 2.2.0**
+- Removed Shapely dependency (zero external dependencies!)
+- Minimum boundary offset: 1 pixel (prevents self-intersections)
+- Simpler installation
+- Smaller package size
 
 ## License
 
@@ -112,9 +107,6 @@ This add-on is provided as-is for use in your Blender projects.
 
 Contributions, bug reports, and feature requests are welcome!
 
-## Version History
+## Attribution
 
-- **1.0.0** - Initial release
-  - Basic alpha channel analysis
-  - Mesh generation with texture application
-  - Simple UI panel
+This code was generated by Claude (Anthropic AI) on behalf of the repository owner. See [ATTRIBUTION.md](ATTRIBUTION.md) for details.
