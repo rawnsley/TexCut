@@ -22,24 +22,44 @@ TexCut creates optimized 2D meshes from images with transparency by following th
 ## Requirements
 
 This add-on requires the following Python packages:
-- `numpy`
-- `Pillow` (PIL)
-- `opencv-python`
+- `numpy` (usually included with Blender)
+- `Pillow` (PIL) (usually included with Blender)
+- `opencv-python` (needs installation)
+- `shapely` (required for HIGH quality mode)
 
-Numpy and Pillow are typically included with Blender, but OpenCV needs to be installed separately. Install them in Blender's Python environment:
+### Required: OpenCV Installation
+
+OpenCV needs to be installed in Blender's Python environment:
 
 ```bash
 # On macOS
-/Applications/Blender.app/Contents/Resources/3.6/python/bin/python3.10 -m pip install opencv-python numpy Pillow
+/Applications/Blender.app/Contents/Resources/4.0/python/bin/python3.11 -m pip install opencv-python
 
 # On Linux
-/path/to/blender/python/bin/python -m pip install opencv-python numpy Pillow
+/path/to/blender/python/bin/python -m pip install opencv-python
 
 # On Windows
-"C:\Program Files\Blender Foundation\Blender\3.6\python\bin\python.exe" -m pip install opencv-python numpy Pillow
+"C:\Program Files\Blender Foundation\Blender\4.0\4.0\python\bin\python.exe" -m pip install opencv-python
 ```
 
-**Note:** Make sure to adjust the Blender version number (3.6) in the path to match your installed version.
+### Optional but Recommended: Shapely Installation
+
+**Shapely is REQUIRED for HIGH quality mesh generation.** Without it, you can only use LOW and MEDIUM quality presets.
+
+```bash
+# On macOS
+/Applications/Blender.app/Contents/Resources/4.0/python/bin/python3.11 -m pip install shapely
+
+# On Windows
+"C:\Program Files\Blender Foundation\Blender\4.0\4.0\python\bin\python.exe" -m pip install shapely
+
+# On Linux
+/path/to/blender/python/bin/python -m pip install shapely
+```
+
+See [INSTALL_SHAPELY.md](INSTALL_SHAPELY.md) for detailed installation instructions and troubleshooting.
+
+**Note:** Adjust the Blender version number (4.0) in the path to match your installed version.
 
 ## Usage
 
