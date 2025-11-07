@@ -300,12 +300,18 @@ class TEXCUT_OT_create_mesh(bpy.types.Operator):
             self.report({'ERROR'}, "No image selected")
             return {'CANCELLED'}
 
-        # Check if image has a filepath
+        # Check if image has a filepath and the file exists
         if image.filepath:
-            # Use the existing filepath
             filepath = bpy.path.abspath(image.filepath)
+            # If the file doesn't exist, treat it as packed/generated
+            if not os.path.exists(filepath):
+                filepath = None
         else:
-            # Image is packed or generated, save to temp file
+            filepath = None
+
+        # If no valid filepath, save image to temp file
+        if filepath is None:
+            # Image is packed, generated, or file missing - save to temp file
             temp_dir = tempfile.gettempdir()
             filepath = os.path.join(temp_dir, f"{image.name}.png")
 
