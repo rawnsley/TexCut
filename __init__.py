@@ -18,7 +18,6 @@ bl_info = {
 
 import bpy
 import bmesh
-from mathutils import Vector
 import numpy as np
 from PIL import Image
 import cv2
