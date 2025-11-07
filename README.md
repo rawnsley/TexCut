@@ -14,6 +14,16 @@ TexCut creates optimized 2D meshes from images with transparency by following th
 - Simple one-click operation from the Image Editor
 - **Minimal dependencies** - only requires OpenCV (one-time install)
 
+## Examples
+
+### Leaf Sprite
+![Leaf Example](screenshots/Example1-Leaf.png)
+*Optimized mesh following the leaf outline, eliminating transparent pixels*
+
+### Tree Billboard
+![Tree Example](screenshots/Example2-Tree.png)
+*Complex tree shape with efficient geometry matching the visible foliage*
+
 ## Installation
 
 ### Step 1: Install OpenCV (One-Time Setup)
