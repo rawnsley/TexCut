@@ -9,7 +9,7 @@ For more information about AI attribution, see ATTRIBUTION.md in the project roo
 bl_info = {
     "name": "TexCut",
     "author": "Your Name",
-    "version": (2, 0, 0),
+    "version": (2, 0, 1),
     "blender": (3, 0, 0),
     "location": "Image Editor > Sidebar > Image",
     "description": "Create optimized 2D meshes from images with transparency",
@@ -172,10 +172,8 @@ def create_mesh_from_outline(name, outline_points, image_width, image_height):
     # Create face from the ordered vertices
     try:
         # The outline points should already be in order from the contour tracing
+        # Create as n-gon - Blender will triangulate correctly at render time
         face = bm.faces.new(verts)
-
-        # Triangulate the face for better rendering
-        bmesh.ops.triangulate(bm, faces=[face])
 
     except Exception as e:
         print(f"Face creation failed: {e}")

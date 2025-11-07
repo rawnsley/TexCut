@@ -1,5 +1,25 @@
 # TexCut Changelog
 
+## [2.0.1] - 2025-11-07
+
+### Fixed
+- **CRITICAL**: Removed pre-triangulation that caused 451.8% triangle overlap
+- Mesh now created as single n-gon face
+- Blender triangulates correctly at render time (respects concave shapes)
+
+### Technical Details
+The previous version used `bmesh.ops.triangulate()` which performs fan triangulation from a single vertex. For concave polygons (trees, sprites, characters), this created massive triangle overlap:
+- Fan triangulation: 451.8% overlap (worse than a quad!)
+- Blender's render-time triangulation: 0% overlap (respects concave shapes)
+
+By letting Blender handle triangulation, we get:
+- ✅ Zero triangle overlap guaranteed
+- ✅ Proper handling of concave shapes
+- ✅ Actually reduces overdraw (as intended)
+- ✅ Simpler code
+
+See [CRITICAL_TRIANGULATION_ISSUE.md](CRITICAL_TRIANGULATION_ISSUE.md) for detailed analysis.
+
 ## [2.0.0] - 2025-11-07
 
 ### Changed
