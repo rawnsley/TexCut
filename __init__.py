@@ -11,9 +11,9 @@ bl_info = {
     "author": "Your Name",
     "version": (1, 0, 0),
     "blender": (3, 0, 0),
-    "location": "View3D > Sidebar > TexCut",
+    "location": "Image Editor > Sidebar > Image",
     "description": "Create optimized 2D meshes from images with transparency",
-    "category": "Mesh",
+    "category": "Image",
 }
 
 import bpy
@@ -190,6 +190,17 @@ def apply_image_texture(obj, image_path):
     else:
         img = bpy.data.images.load(image_path)
 
+    apply_image_texture_from_datablock(obj, img)
+
+
+def apply_image_texture_from_datablock(obj, img):
+    """
+    Apply a Blender image datablock as a texture to the mesh object.
+
+    Args:
+        obj: Mesh object
+        img: Blender image datablock
+    """
     # Create material
     mat = bpy.data.materials.new(name=obj.name + "_Material")
     mat.use_nodes = True
@@ -245,16 +256,10 @@ def apply_image_texture(obj, image_path):
 
 
 class TEXCUT_OT_create_mesh(bpy.types.Operator):
-    """Create optimized mesh from image with transparency"""
+    """Create optimized mesh from the current image"""
     bl_idname = "texcut.create_mesh"
     bl_label = "Create Mesh from Image"
     bl_options = {'REGISTER', 'UNDO'}
-
-    filepath: bpy.props.StringProperty(
-        name="Image File",
-        description="Path to image file with transparency",
-        subtype='FILE_PATH'
-    )
 
     maintain_aspect: bpy.props.BoolProperty(
         name="Maintain Aspect Ratio",
@@ -280,31 +285,66 @@ class TEXCUT_OT_create_mesh(bpy.types.Operator):
         step=0.5
     )
 
+    @classmethod
+    def poll(cls, context):
+        """Only enable if an image is active in the Image Editor."""
+        return (context.space_data.type == 'IMAGE_EDITOR' and
+                context.space_data.image is not None)
+
     def execute(self, context):
-        if not self.filepath or not os.path.exists(self.filepath):
-            self.report({'ERROR'}, "Invalid image file path")
+        import tempfile
+
+        image = context.space_data.image
+
+        if not image:
+            self.report({'ERROR'}, "No image selected")
             return {'CANCELLED'}
 
-        # Create mesh
-        obj_name = os.path.splitext(os.path.basename(self.filepath))[0]
+        # Check if image has a filepath
+        if image.filepath:
+            # Use the existing filepath
+            filepath = bpy.path.abspath(image.filepath)
+        else:
+            # Image is packed or generated, save to temp file
+            temp_dir = tempfile.gettempdir()
+            filepath = os.path.join(temp_dir, f"{image.name}.png")
+
+            # Save image to temp location
+            original_filepath = image.filepath_raw
+            original_file_format = image.file_format
+
+            image.filepath_raw = filepath
+            image.file_format = 'PNG'
+            image.save()
+
+            # Restore original settings
+            image.filepath_raw = original_filepath
+            image.file_format = original_file_format
 
         try:
             obj = create_optimized_mesh(
-                obj_name,
-                self.filepath,
+                image.name,
+                filepath,
                 self.maintain_aspect,
                 self.alpha_threshold,
                 self.simplify_tolerance
             )
 
             if obj:
-                # Apply texture
-                apply_image_texture(obj, self.filepath)
+                # Apply texture using the Blender image datablock
+                apply_image_texture_from_datablock(obj, image)
 
-                # Select the new object
-                bpy.ops.object.select_all(action='DESELECT')
-                obj.select_set(True)
-                context.view_layer.objects.active = obj
+                # Switch to 3D viewport and select the new object
+                # Find a 3D viewport
+                for area in context.screen.areas:
+                    if area.type == 'VIEW_3D':
+                        for space in area.spaces:
+                            if space.type == 'VIEW_3D':
+                                # Set the object as active
+                                context.view_layer.objects.active = obj
+                                obj.select_set(True)
+                                break
+                        break
 
                 self.report({'INFO'}, f"Created mesh: {obj.name}")
                 return {'FINISHED'}
@@ -314,37 +354,46 @@ class TEXCUT_OT_create_mesh(bpy.types.Operator):
 
         except Exception as e:
             self.report({'ERROR'}, f"Error: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return {'CANCELLED'}
 
     def draw(self, context):
-        """Draw the operator properties in the file browser."""
+        """Draw the operator properties."""
         layout = self.layout
 
         layout.prop(self, "alpha_threshold")
         layout.prop(self, "simplify_tolerance")
         layout.prop(self, "maintain_aspect")
 
-    def invoke(self, context, event):
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
-
 
 class TEXCUT_PT_panel(bpy.types.Panel):
-    """TexCut panel in the 3D viewport sidebar"""
+    """TexCut panel in the Image Editor sidebar"""
     bl_label = "TexCut"
     bl_idname = "TEXCUT_PT_panel"
-    bl_space_type = 'VIEW_3D'
+    bl_space_type = 'IMAGE_EDITOR'
     bl_region_type = 'UI'
-    bl_category = 'TexCut'
+    bl_category = 'Image'
+
+    @classmethod
+    def poll(cls, context):
+        """Only show panel when an image is loaded."""
+        return context.space_data.image is not None
 
     def draw(self, context):
         layout = self.layout
 
+        image = context.space_data.image
+
+        if image:
+            layout.label(text=f"Image: {image.name}")
+            layout.separator()
+
         layout.label(text="Create Optimized Mesh:")
-        layout.operator("texcut.create_mesh", icon='IMAGE_DATA')
+        layout.operator("texcut.create_mesh", icon='MESH_DATA')
 
         layout.separator()
-        layout.label(text="Reduces pixel overdraw by")
+        layout.label(text="Reduces pixel overdraw by", icon='INFO')
         layout.label(text="following transparency outline")
 
 
