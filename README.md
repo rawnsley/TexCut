@@ -4,6 +4,16 @@
 
 TexCut creates optimized 2D meshes from images with transparency by following the outline of non-transparent pixels. This significantly reduces pixel overdraw compared to standard quad meshes, making it ideal for scenes with lots of overlapping alpha-masked objects like forests, grass, and foliage.
 
+## Compatibility
+
+**Blender Version:** 4.0 and above
+
+This addon is compatible with Blender 4.x including the latest versions (4.0, 4.1, 4.2, 4.3+). It automatically detects your Blender version and uses the appropriate API:
+- **Blender 4.0-4.1**: Uses legacy blend_method and shadow_method properties
+- **Blender 4.2+**: Uses the new EEVEE Next surface_render_method
+
+For Blender 3.x users, please use version 2.2.0 of this addon.
+
 ## Features
 
 - Analyzes image alpha channel to detect non-transparent regions
@@ -34,7 +44,7 @@ OpenCV is not included with Blender by default, but installation is simple:
 1. Open Command Prompt as Administrator
 2. Navigate to Blender's Python folder:
    ```
-   cd "C:\Program Files\Blender Foundation\Blender 3.x\3.x\python\bin"
+   cd "C:\Program Files\Blender Foundation\Blender 4.x\4.x\python\bin"
    ```
 3. Install OpenCV:
    ```
@@ -45,7 +55,7 @@ OpenCV is not included with Blender by default, but installation is simple:
 1. Open Terminal
 2. Navigate to Blender's Python folder:
    ```
-   cd /Applications/Blender.app/Contents/Resources/3.x/python/bin
+   cd /Applications/Blender.app/Contents/Resources/4.x/python/bin
    ```
 3. Install OpenCV:
    ```
@@ -56,7 +66,7 @@ OpenCV is not included with Blender by default, but installation is simple:
 1. Open Terminal
 2. Navigate to Blender's Python folder (location varies by installation):
    ```
-   cd /usr/share/blender/3.x/python/bin
+   cd /usr/share/blender/4.x/python/bin
    ```
 3. Install OpenCV:
    ```
@@ -133,7 +143,13 @@ Testing showed that 1+ pixel dilation prevents 100% of self-intersections across
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
 
-**Current Version: 2.2.0**
+**Current Version: 2.3.0**
+- Blender 4.x compatibility (4.0, 4.1, 4.2, 4.3+)
+- Automatic API detection for different Blender versions
+- Support for new EEVEE Next rendering system (Blender 4.2+)
+- Updated installation instructions for Blender 4.x
+
+**Version 2.2.0**
 - Removed Shapely dependency (only OpenCV required)
 - Minimum boundary offset: 1 pixel (prevents self-intersections)
 - Simpler installation

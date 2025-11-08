@@ -9,8 +9,8 @@ For more information about AI attribution, see ATTRIBUTION.md in the project roo
 bl_info = {
     "name": "TexCut",
     "author": "Claude and Rupert",
-    "version": (2, 2, 0),
-    "blender": (3, 0, 0),
+    "version": (2, 3, 0),
+    "blender": (4, 0, 0),
     "location": "Image Editor > Sidebar > Image",
     "description": "Create optimized 2D meshes from images with transparency",
     "category": "Image",
@@ -229,9 +229,17 @@ def apply_image_texture_from_datablock(obj, img):
     links.new(node_tex.outputs['Alpha'], node_bsdf.inputs['Alpha'])
     links.new(node_bsdf.outputs['BSDF'], node_output.inputs['Surface'])
 
-    # Set blend mode for transparency
-    mat.blend_method = 'CLIP'  # Use alpha clipping (MASK mode)
-    mat.shadow_method = 'CLIP'
+    # Set blend mode for transparency - handle different Blender versions
+    # Blender 4.2+ uses surface_render_method, earlier versions use blend_method
+    if bpy.app.version >= (4, 2, 0):
+        # Blender 4.2+ - use new EEVEE Next API
+        if hasattr(mat, 'surface_render_method'):
+            mat.surface_render_method = 'DITHERED'  # Closest to CLIP in new system
+    else:
+        # Blender 4.0-4.1 - use legacy API
+        mat.blend_method = 'CLIP'  # Use alpha clipping (MASK mode)
+        if hasattr(mat, 'shadow_method'):  # shadow_method removed in 4.3
+            mat.shadow_method = 'CLIP'
 
     # Assign material to object
     if obj.data.materials:
