@@ -1,5 +1,52 @@
 # TexCut Changelog
 
+## [2.3.1] - 2025-11-10
+
+### Removed
+- **Pillow (PIL) dependency**: Removed in favor of OpenCV for all image operations
+- Simplified installation - now only requires OpenCV (plus numpy which comes with Blender)
+
+### Changed
+- Image loading now uses `cv2.imread()` instead of PIL's `Image.open()`
+- More robust image handling with better error checking
+- Handles images without alpha channels gracefully
+- **Updated installation instructions**: Now installs OpenCV to Blender's user addons modules directory
+- Added helpful diagnostic error messages if OpenCV is not found
+
+### Why This Change?
+Blender 4.5 no longer includes Pillow (PIL) by default, requiring users to install it manually. Since OpenCV was already required and can handle all image operations we need, removing PIL:
+- ✅ Reduces dependencies (one package instead of two)
+- ✅ Simpler installation process
+- ✅ Smaller package size
+- ✅ Works out of the box with just one pip install
+
+### Installation Note
+The installation process now uses Blender's user scripts directory (`~/Library/Application Support/Blender/4.x/scripts/addons/modules` on macOS) which doesn't require administrator permissions and is automatically in Blender's Python path.
+
+## [2.3.0] - 2025-11-08
+
+### Added
+- **Blender 4.x Compatibility**: Full support for Blender 4.0, 4.1, 4.2, and 4.3+
+- Automatic Blender version detection
+- Support for new EEVEE Next rendering system (Blender 4.2+)
+
+### Changed
+- Updated minimum Blender version requirement to 4.0.0
+- Material blend mode setup now adapts to Blender version:
+  - Blender 4.0-4.1: Uses `blend_method` and `shadow_method` properties
+  - Blender 4.2+: Uses new `surface_render_method` property with DITHERED mode
+- Updated installation instructions for Blender 4.x paths
+
+### Technical Details
+The addon now checks `bpy.app.version` to determine the appropriate API:
+- For Blender 4.2+, uses `surface_render_method = 'DITHERED'` (closest equivalent to CLIP)
+- For Blender 4.0-4.1, uses legacy `blend_method = 'CLIP'` and `shadow_method = 'CLIP'`
+- Includes safety checks with `hasattr()` to handle API differences across versions
+
+### Migration Notes
+- Users on Blender 3.x should continue using TexCut version 2.2.0
+- Users upgrading to Blender 4.x should install version 2.3.0
+
 ## [2.2.0] - 2025-11-07
 
 ### Removed
