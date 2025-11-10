@@ -1,5 +1,28 @@
 # TexCut Changelog
 
+## [2.3.1] - 2025-11-10
+
+### Removed
+- **Pillow (PIL) dependency**: Removed in favor of OpenCV for all image operations
+- Simplified installation - now only requires OpenCV (plus numpy which comes with Blender)
+
+### Changed
+- Image loading now uses `cv2.imread()` instead of PIL's `Image.open()`
+- More robust image handling with better error checking
+- Handles images without alpha channels gracefully
+- **Updated installation instructions**: Now installs OpenCV to Blender's user addons modules directory
+- Added helpful diagnostic error messages if OpenCV is not found
+
+### Why This Change?
+Blender 4.5 no longer includes Pillow (PIL) by default, requiring users to install it manually. Since OpenCV was already required and can handle all image operations we need, removing PIL:
+- ✅ Reduces dependencies (one package instead of two)
+- ✅ Simpler installation process
+- ✅ Smaller package size
+- ✅ Works out of the box with just one pip install
+
+### Installation Note
+The installation process now uses Blender's user scripts directory (`~/Library/Application Support/Blender/4.x/scripts/addons/modules` on macOS) which doesn't require administrator permissions and is automatically in Blender's Python path.
+
 ## [2.3.0] - 2025-11-08
 
 ### Added

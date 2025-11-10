@@ -9,7 +9,7 @@ For more information about AI attribution, see ATTRIBUTION.md in the project roo
 bl_info = {
     "name": "TexCut",
     "author": "Claude and Rupert",
-    "version": (2, 3, 0),
+    "version": (2, 3, 1),
     "blender": (4, 0, 0),
     "location": "Image Editor > Sidebar > Image",
     "description": "Create optimized 2D meshes from images with transparency",
@@ -19,9 +19,28 @@ bl_info = {
 import bpy
 import bmesh
 import numpy as np
-from PIL import Image
-import cv2
 import os
+
+# Try to import cv2 with helpful error message
+try:
+    import cv2
+except ImportError as e:
+    import sys
+    error_msg = (
+        "TexCut Error: OpenCV (cv2) not found!\n\n"
+        f"Python executable: {sys.executable}\n"
+        f"Python version: {sys.version}\n\n"
+        "To install OpenCV, run this command in Terminal:\n"
+        f"  {sys.executable} -m pip install opencv-python\n\n"
+        f"Or navigate to Blender's Python bin folder and run:\n"
+        "  ./python3.11 -m pip install opencv-python\n\n"
+        f"Python is looking in these paths:\n"
+    )
+    for path in sys.path:
+        error_msg += f"  - {path}\n"
+
+    print(error_msg)
+    raise ImportError(error_msg) from e
 
 
 def analyze_alpha_channel(image_path, threshold=0.01, boundary_offset=8):
@@ -37,11 +56,21 @@ def analyze_alpha_channel(image_path, threshold=0.01, boundary_offset=8):
     Returns:
         Tuple of (normalized_contour, width, height)
     """
-    img = Image.open(image_path).convert('RGBA')
-    width, height = img.size
+    # Load image with alpha channel using OpenCV
+    img = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
 
-    # Get alpha channel as numpy array
-    alpha = np.array(img)[:, :, 3]
+    if img is None:
+        print(f"TexCut: Failed to load image: {image_path}")
+        return [], 0, 0
+
+    height, width = img.shape[:2]
+
+    # Get alpha channel (or create full opacity if no alpha)
+    if img.shape[2] == 4:
+        alpha = img[:, :, 3]
+    else:
+        # No alpha channel - create full opacity mask
+        alpha = np.full((height, width), 255, dtype=np.uint8)
 
     # Create binary mask (0 or 255 for OpenCV)
     mask = (alpha > (threshold * 255)).astype(np.uint8) * 255

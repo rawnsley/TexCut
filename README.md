@@ -38,40 +38,35 @@ For Blender 3.x users, please use version 2.2.0 of this addon.
 
 ### Step 1: Install OpenCV (One-Time Setup)
 
-OpenCV is not included with Blender by default, but installation is simple:
+This addon requires OpenCV, which is not included with Blender by default. Installation is simple:
 
 **On Windows:**
-1. Open Command Prompt as Administrator
-2. Navigate to Blender's Python folder:
+1. Open Command Prompt
+2. Run this command (replace 4.x with your Blender version, e.g., 4.5):
    ```
-   cd "C:\Program Files\Blender Foundation\Blender 4.x\4.x\python\bin"
+   mkdir "%APPDATA%\Blender Foundation\Blender\4.x\scripts\addons\modules"
+   "C:\Program Files\Blender Foundation\Blender 4.x\4.x\python\bin\python.exe" -m pip install --target="%APPDATA%\Blender Foundation\Blender\4.x\scripts\addons\modules" opencv-python
    ```
-3. Install OpenCV:
-   ```
-   python.exe -m pip install opencv-python
-   ```
+3. Restart Blender after installation
 
 **On macOS:**
 1. Open Terminal
-2. Navigate to Blender's Python folder:
+2. Run this command (replace 4.x with your Blender version, e.g., 4.5):
    ```
-   cd /Applications/Blender.app/Contents/Resources/4.x/python/bin
+   mkdir -p "$HOME/Library/Application Support/Blender/4.x/scripts/addons/modules"
+   /Applications/Blender.app/Contents/Resources/4.x/python/bin/python3.11 -m pip install --target="$HOME/Library/Application Support/Blender/4.x/scripts/addons/modules" opencv-python
    ```
-3. Install OpenCV:
-   ```
-   ./python3.x -m pip install opencv-python
-   ```
+3. Restart Blender after installation
 
 **On Linux:**
 1. Open Terminal
-2. Navigate to Blender's Python folder (location varies by installation):
+2. Run this command (replace 4.x with your Blender version, e.g., 4.5):
    ```
-   cd /usr/share/blender/4.x/python/bin
+   mkdir -p "$HOME/.config/blender/4.x/scripts/addons/modules"
+   /usr/share/blender/4.x/python/bin/python3.11 -m pip install --target="$HOME/.config/blender/4.x/scripts/addons/modules" opencv-python
    ```
-3. Install OpenCV:
-   ```
-   ./python3.x -m pip install opencv-python
-   ```
+   Note: Blender Python path may vary by installation (could be in `/usr/bin/`, `/opt/blender/`, etc.)
+3. Restart Blender after installation
 
 ### Step 2: Install the Add-on
 
@@ -84,7 +79,6 @@ OpenCV is not included with Blender by default, but installation is simple:
 
 This add-on uses these Python packages:
 - `numpy` ✅ (included with Blender)
-- `Pillow` (PIL) ✅ (included with Blender)
 - `opencv-python` ⚠️ **Requires installation** (see installation instructions above)
 
 Only OpenCV needs to be installed - it's a simple one-time setup using pip.
@@ -143,7 +137,11 @@ Testing showed that 1+ pixel dilation prevents 100% of self-intersections across
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
 
-**Current Version: 2.3.0**
+**Current Version: 2.3.1**
+- Removed Pillow (PIL) dependency - now only requires OpenCV
+- Simpler installation with fewer dependencies
+
+**Version 2.3.0**
 - Blender 4.x compatibility (4.0, 4.1, 4.2, 4.3+)
 - Automatic API detection for different Blender versions
 - Support for new EEVEE Next rendering system (Blender 4.2+)
