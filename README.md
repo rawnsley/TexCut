@@ -17,6 +17,7 @@ For Blender 3.x users, please use version 2.2.0 of this addon.
 - Analyzes image alpha channel to detect non-transparent regions
 - Generates mesh geometry that follows the transparency outline
 - Automatically applies the image as a texture
+- Maintains image aspect ratio
 - User-adjustable boundary offset (prevents edge clipping)
 
 ## Examples
@@ -86,13 +87,13 @@ Only OpenCV needs to be installed - it's a simple one-time setup using pip.
 4. Adjust settings in the dialog:
    - **Alpha Threshold**: How transparent a pixel needs to be to ignore (default: 0.01)
    - **Boundary Offset**: Extra pixels around the edge to prevent clipping (default: 8px, minimum: 1px)
-   - **Maintain Aspect Ratio**: Scale mesh to match image proportions
 5. Click **OK**
 
 The add-on will:
 - Analyze the alpha channel
 - Generate an optimized mesh following the non-transparent regions
 - Apply the image as a texture with proper alpha blending
+- Scale the mesh to maintain the image's aspect ratio
 - Add the mesh to your scene
 
 ## Benefits

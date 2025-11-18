@@ -189,15 +189,14 @@ def create_mesh_from_outline(name, outline_points, image_width, image_height):
     return obj
 
 
-def create_optimized_mesh(name, image_path, aspect_ratio=True, threshold=0.01, boundary_offset=8):
+def create_optimized_mesh(name, image_path, threshold=0.01, boundary_offset=8):
     """
     Main function to create an optimized mesh from an image with transparency.
-    Always uses highest quality settings.
+    Always uses highest quality settings and maintains aspect ratio.
 
     Args:
         name: Name for the mesh object
         image_path: Path to the image file
-        aspect_ratio: Maintain image aspect ratio
         threshold: Alpha threshold for edge detection (0-1)
         boundary_offset: Number of pixels to expand the boundary (default 8)
 
@@ -214,7 +213,7 @@ def create_optimized_mesh(name, image_path, aspect_ratio=True, threshold=0.01, b
     # Create mesh
     obj = create_mesh_from_outline(name, outline_points, width, height)
 
-    if obj and aspect_ratio:
+    if obj:
         # Scale to maintain aspect ratio
         obj.scale.x = width / max(width, height)
         obj.scale.y = height / max(width, height)
@@ -318,12 +317,6 @@ class TEXCUT_OT_create_mesh(bpy.types.Operator):
     bl_label = "Create Mesh from Image"
     bl_options = {'REGISTER', 'UNDO'}
 
-    maintain_aspect: bpy.props.BoolProperty(
-        name="Maintain Aspect Ratio",
-        description="Scale mesh to maintain image aspect ratio",
-        default=True
-    )
-
     alpha_threshold: bpy.props.FloatProperty(
         name="Alpha Threshold",
         description="Alpha threshold for edge detection (higher = tighter fit around opaque areas)",
@@ -392,7 +385,6 @@ class TEXCUT_OT_create_mesh(bpy.types.Operator):
             obj = create_optimized_mesh(
                 image.name,
                 filepath,
-                self.maintain_aspect,
                 self.alpha_threshold,
                 self.boundary_offset
             )
@@ -431,7 +423,6 @@ class TEXCUT_OT_create_mesh(bpy.types.Operator):
 
         layout.prop(self, "alpha_threshold")
         layout.prop(self, "boundary_offset")
-        layout.prop(self, "maintain_aspect")
 
 
 class TEXCUT_PT_panel(bpy.types.Panel):
