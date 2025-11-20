@@ -106,7 +106,7 @@ Testing showed that 1+ pixel dilation prevents 100% of self-intersections across
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
 
-**Current Version: 3.0.0**
+**Current Version: 4.0.0**
 - **Zero external dependencies** - works out of the box with Blender
 - Replaced OpenCV with pure NumPy + Blender API implementation
 - Uses Moore neighbor tracing for contour detection

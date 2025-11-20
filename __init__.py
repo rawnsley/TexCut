@@ -26,7 +26,7 @@ For more information about AI attribution, see ATTRIBUTION.md in the project roo
 bl_info = {
     "name": "TexCut",
     "author": "Claude and Rupert",
-    "version": (3, 0, 0),
+    "version": (4, 0, 0),
     "blender": (4, 0, 0),
     "location": "Image Editor > Sidebar > Image",
     "description": "Create optimized 2D meshes from images with transparency",
