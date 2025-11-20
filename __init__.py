@@ -26,7 +26,7 @@ For more information about AI attribution, see ATTRIBUTION.md in the project roo
 bl_info = {
     "name": "TexCut",
     "author": "Claude and Rupert",
-    "version": (2, 3, 1),
+    "version": (3, 0, 0),
     "blender": (4, 0, 0),
     "location": "Image Editor > Sidebar > Image",
     "description": "Create optimized 2D meshes from images with transparency",
@@ -37,99 +37,7 @@ import bpy
 import bmesh
 import numpy as np
 import os
-
-# Try to import cv2 with helpful error message
-try:
-    import cv2
-except ImportError as e:
-    import sys
-    error_msg = (
-        "TexCut Error: OpenCV (cv2) not found!\n\n"
-        f"Python executable: {sys.executable}\n"
-        f"Python version: {sys.version}\n\n"
-        "To install OpenCV, run this command in Terminal:\n"
-        f"  {sys.executable} -m pip install opencv-python\n\n"
-        f"Or navigate to Blender's Python bin folder and run:\n"
-        "  ./python3.11 -m pip install opencv-python\n\n"
-        f"Python is looking in these paths:\n"
-    )
-    for path in sys.path:
-        error_msg += f"  - {path}\n"
-
-    print(error_msg)
-    raise ImportError(error_msg) from e
-
-
-def analyze_alpha_channel(image_path, threshold=0.01, boundary_offset=8):
-    """
-    Analyze image alpha channel and return outline points using OpenCV contour detection.
-    Uses highest quality (0.001) with boundary dilation to prevent self-intersections.
-
-    Args:
-        image_path: Path to the image file
-        threshold: Alpha threshold for considering a pixel opaque (0-1)
-        boundary_offset: Number of pixels to expand the boundary (default 8, minimum 1)
-
-    Returns:
-        Tuple of (normalized_contour, width, height)
-    """
-    # Load image with alpha channel using OpenCV
-    img = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
-
-    if img is None:
-        print(f"TexCut: Failed to load image: {image_path}")
-        return [], 0, 0
-
-    height, width = img.shape[:2]
-
-    # Get alpha channel (or create full opacity if no alpha)
-    if img.shape[2] == 4:
-        alpha = img[:, :, 3]
-    else:
-        # No alpha channel - create full opacity mask
-        alpha = np.full((height, width), 255, dtype=np.uint8)
-
-    # Create binary mask (0 or 255 for OpenCV)
-    mask = (alpha > (threshold * 255)).astype(np.uint8) * 255
-
-    # Dilate the mask to expand boundary by boundary_offset pixels
-    if boundary_offset > 0:
-        kernel = np.ones((boundary_offset * 2 + 1, boundary_offset * 2 + 1), np.uint8)
-        mask = cv2.dilate(mask, kernel, iterations=1)
-        print(f"TexCut: Expanded boundary by {boundary_offset} pixels using dilation")
-
-    # Find contours using OpenCV
-    contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    print(f"TexCut: Found {len(contours)} contours with threshold={threshold}")
-
-    if len(contours) == 0:
-        # No contours found, return empty
-        print(f"TexCut: No contours found!")
-        return [], width, height
-
-    # Get the largest contour (main object)
-    largest_contour = max(contours, key=cv2.contourArea)
-    area = cv2.contourArea(largest_contour)
-    print(f"TexCut: Largest contour area = {area:.0f} pixels, {len(largest_contour)} initial points")
-
-    # Use highest quality simplification (0.001)
-    perimeter = cv2.arcLength(largest_contour, True)
-    epsilon = 0.001 * perimeter
-    largest_contour = cv2.approxPolyDP(largest_contour, epsilon, True)
-    print(f"TexCut: After simplification (epsilon={epsilon:.2f}): {len(largest_contour)} points")
-
-    # Convert to list of tuples
-    contour = [(int(point[0][0]), int(point[0][1])) for point in largest_contour]
-
-    # Normalize coordinates to -0.5 to 0.5 range
-    normalized_contour = []
-    for x, y in contour:
-        norm_x = (x / width) - 0.5
-        norm_y = 0.5 - (y / height)  # Flip Y axis for Blender
-        normalized_contour.append((norm_x, norm_y))
-
-    return normalized_contour, width, height
+from . import texcut_algo
 
 
 def create_mesh_from_outline(name, outline_points, image_width, image_height):
@@ -203,8 +111,8 @@ def create_optimized_mesh(name, image_path, threshold=0.01, boundary_offset=8):
     Returns:
         Created mesh object
     """
-    # Analyze image
-    outline_points, width, height = analyze_alpha_channel(image_path, threshold, boundary_offset)
+    # Analyze image using OpenCV-free implementation
+    outline_points, width, height = texcut_algo.analyze_alpha_channel(image_path, threshold, boundary_offset)
 
     if not outline_points:
         # Fallback to simple quad if no outline detected
